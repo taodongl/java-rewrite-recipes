@@ -1,0 +1,24 @@
+#
+# Aggregates the Refaster-generated recipes for the IntelliJ `ReadWriteStringCanBeUsed`
+# inspection under a single, stable public recipe name.
+#
+# Run with the rewrite-maven-plugin, e.g.:
+#   mvn org.openrewrite.maven:rewrite-maven-plugin:run \
+#     -Drewrite.activeRecipes=io.github.taodongl.UseFilesReadWriteString \
+#     -Drewrite.recipeArtifactCoordinates=io.github.taodongl:java-rewrite-recipes:1.0-SNAPSHOT
+#
+type: specs.openrewrite.org/v1beta/recipe
+name: io.github.taodongl.UseFilesReadWriteString
+displayName: Use `Files.readString()` and `Files.writeString()`
+description: >-
+  Replace byte-based `java.nio.file.Files` read/write idioms with the `Files.readString()` and
+  `Files.writeString()` methods introduced in Java 11. Implements IntelliJ's `ReadWriteStringCanBeUsed`
+  inspection.
+# Gate the whole recipe on Java 11+: `Files.readString()`/`writeString()` do not exist before Java 11,
+# so applying this to lower source levels would produce code that does not compile. The precondition
+# reads each source file's JavaVersion marker (populated by the build plugin from source/target level).
+preconditions:
+  - org.openrewrite.java.search.HasJavaVersion:
+      version: "[11,)"
+recipeList:
+  - io.github.taodongl.ReadWriteStringCanBeUsedRecipes

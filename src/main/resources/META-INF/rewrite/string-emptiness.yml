@@ -1,0 +1,27 @@
+#
+# String emptiness/blankness modernization recipes.
+#
+# Two separate public recipes on purpose: String.isEmpty() exists since Java 6 (no version gate),
+# while String.isBlank() requires Java 11 (gated with a HasJavaVersion precondition).
+#
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: io.github.taodongl.UseStringIsEmpty
+displayName: Use `String.isEmpty()`
+description: >-
+  Replace `String.length()` comparisons against zero with `String.isEmpty()`. Safe on any Java
+  version (`String.isEmpty()` was introduced in Java 6).
+recipeList:
+  - io.github.taodongl.StringIsEmptyCanBeUsedRecipes
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: io.github.taodongl.UseStringIsBlank
+displayName: Use `String.isBlank()`
+description: >-
+  Replace `String.trim()`-based emptiness checks with `String.isBlank()`. Gated to Java 11+ because
+  `String.isBlank()` was introduced in Java 11; applying it to lower source levels would not compile.
+preconditions:
+  - org.openrewrite.java.search.HasJavaVersion:
+      version: "[11,)"
+recipeList:
+  - io.github.taodongl.StringIsBlankCanBeUsedRecipes

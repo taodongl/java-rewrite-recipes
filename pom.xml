@@ -1,0 +1,277 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.github.taodongl</groupId>
+  <artifactId>java-rewrite-recipes</artifactId>
+  <version>1.0</version>
+  <packaging>jar</packaging>
+
+  <name>java-rewrite-recipes</name>
+  <description>OpenRewrite recipes (Refaster templates and imperative visitors) for Java language level migration aids.</description>
+  <url>https://github.com/taodongl/java-rewrite-recipes</url>
+
+  <licenses>
+    <!-- License of the original recipes authored in this project. NOTE: the vendored switch-expression
+         recipe (SwitchCaseReturnsToSwitchExpression, SwitchUtils) is under the Moderne Source Available
+         License; see its file headers and THIRD-PARTY-NOTICES.md. -->
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/license/mit</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>taodongl</id>
+      <name>Taodong Lu</name>
+      <email>taodong.lu@cloud.com</email>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:https://github.com/taodongl/java-rewrite-recipes.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/taodongl/java-rewrite-recipes.git</developerConnection>
+    <url>https://github.com/taodongl/java-rewrite-recipes</url>
+  </scm>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>17</maven.compiler.release>
+
+    <rewrite-recipe-bom.version>3.31.0</rewrite-recipe-bom.version>
+    <rewrite-templating.version>1.41.7</rewrite-templating.version>
+    <!-- error_prone_core only supplies the Refaster annotations at compile time. Pinned to the
+         latest version still compiled to Java 17 bytecode (2.42.0+ targets Java 21 and is unreadable
+         by javac 17). -->
+    <error-prone.version>2.41.0</error-prone.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Aligns all rewrite-* and recipe module versions. -->
+      <dependency>
+        <groupId>org.openrewrite.recipe</groupId>
+        <artifactId>rewrite-recipe-bom</artifactId>
+        <version>${rewrite-recipe-bom.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- Keep all JUnit Platform/Jupiter modules on a single, consistent version. -->
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>5.14.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- Core OpenRewrite Java refactoring API used by the generated recipes. -->
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-java</artifactId>
+    </dependency>
+    <!-- Runtime support for recipes generated from Refaster templates. -->
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-templating</artifactId>
+    </dependency>
+    <!-- Imperative recipe support: SwitchCaseReturnsToSwitchExpression uses the Groovy/Kotlin
+         file-checker preconditions from rewrite-static-analysis. -->
+    <dependency>
+      <groupId>org.openrewrite.recipe</groupId>
+      <artifactId>rewrite-static-analysis</artifactId>
+    </dependency>
+    <!-- Supplies the @BeforeTemplate/@AfterTemplate/@Repeated Refaster annotations (compile only). -->
+    <dependency>
+      <groupId>com.google.errorprone</groupId>
+      <artifactId>error_prone_core</artifactId>
+      <version>${error-prone.version}</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>io.github.eisop</groupId>
+          <artifactId>dataflow-errorprone</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <!-- Provides jakarta.annotation.Generated referenced by the generated recipe sources. -->
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+      <version>3.0.0</version>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Java parser used by the test framework at runtime (matches the JDK the build runs on). -->
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-java-21</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.openrewrite</groupId>
+      <artifactId>rewrite-java-17</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>3.27.3</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <compilerArgs>
+            <!-- Preserve parameter names; Refaster matching relies on them. -->
+            <arg>-parameters</arg>
+            <!-- Annotation used to mark generated recipe sources. -->
+            <arg>-Arewrite.generatedAnnotation=jakarta.annotation.Generated</arg>
+          </compilerArgs>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.openrewrite</groupId>
+              <artifactId>rewrite-templating</artifactId>
+              <version>${rewrite-templating.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
+        <configuration>
+          <!-- OpenRewrite's Java parser reaches into javac internals, which are encapsulated on JDK 16+. -->
+          <argLine>
+            --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
+            --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
+            --add-exports jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED
+            --add-exports jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED
+            --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
+            --add-exports jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED
+            --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED
+            --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+            --add-exports jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED
+            --add-exports jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED
+            --add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED
+            --add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED
+          </argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- Activate with `-Prelease` for Maven Central publishing: builds sources + javadoc jars,
+         GPG-signs every artifact, and uploads via the Sonatype Central Portal. -->
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.3.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.12.0</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <!-- Generated recipe sources and internal OpenRewrite APIs are not javadoc-clean. -->
+              <doclint>none</doclint>
+              <failOnError>false</failOnError>
+              <quiet>true</quiet>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.2.8</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <!-- Non-interactive signing: take the passphrase from gpg.passphrase /
+                   MAVEN_GPG_PASSPHRASE instead of prompting. Works on CI and Windows. -->
+              <gpgArguments>
+                <arg>--pinentry-mode</arg>
+                <arg>loopback</arg>
+              </gpgArguments>
+            </configuration>
+          </plugin>
+          <!-- The default deploy plugin has nothing to deploy to; the Central plugin takes over. -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.10.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <!-- Must match the <server><id> in ~/.m2/settings.xml holding your Central Portal token. -->
+              <publishingServerId>central</publishingServerId>
+              <!-- Leave false to review the deployment in the Central Portal UI before releasing. -->
+              <autoPublish>false</autoPublish>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>
