@@ -4,17 +4,14 @@
 
   <groupId>io.github.taodongl</groupId>
   <artifactId>java-rewrite-recipes</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
   <packaging>jar</packaging>
 
   <name>java-rewrite-recipes</name>
-  <description>OpenRewrite recipes (Refaster templates and imperative visitors) for Java language level migration aids.</description>
+  <description>OpenRewrite recipes (Refaster templates) for Java language level migration aids.</description>
   <url>https://github.com/taodongl/java-rewrite-recipes</url>
 
   <licenses>
-    <!-- License of the original recipes authored in this project. NOTE: the vendored switch-expression
-         recipe (SwitchCaseReturnsToSwitchExpression, SwitchUtils) is under the Moderne Source Available
-         License; see its file headers and THIRD-PARTY-NOTICES.md. -->
     <license>
       <name>MIT License</name>
       <url>https://opensource.org/license/mit</url>
@@ -79,12 +76,6 @@
     <dependency>
       <groupId>org.openrewrite</groupId>
       <artifactId>rewrite-templating</artifactId>
-    </dependency>
-    <!-- Imperative recipe support: SwitchCaseReturnsToSwitchExpression uses the Groovy/Kotlin
-         file-checker preconditions from rewrite-static-analysis. -->
-    <dependency>
-      <groupId>org.openrewrite.recipe</groupId>
-      <artifactId>rewrite-static-analysis</artifactId>
     </dependency>
     <!-- Supplies the @BeforeTemplate/@AfterTemplate/@Repeated Refaster annotations (compile only). -->
     <dependency>

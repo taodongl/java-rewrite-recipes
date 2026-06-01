@@ -44,7 +44,7 @@ Notes:
 
 ## Project layout
 
-- `src/main/java/org/example/ReadWriteStringCanBeUsed.java` — the Refaster template
+- `src/main/java/io/github/taodongl/ReadWriteStringCanBeUsed.java` — the Refaster template
   (`@BeforeTemplate` / `@AfterTemplate`, grouped with `@RecipeDescriptor`). The
   `rewrite-templating` annotation processor generates `ReadWriteStringCanBeUsedRecipes` at compile
   time into `target/generated-sources/annotations`.
