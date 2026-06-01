@@ -8,8 +8,7 @@ OpenRewrite recipes authored with **Refaster templates**, implementing several I
 | Declarative name | What it does | Java gate |
 | --- | --- | --- |
 | `io.github.taodongl.UseFilesReadWriteString` | `Files` byte read/write → `Files.readString()` / `writeString()` | **11+** |
-| `io.github.taodongl.UseStringIsEmpty` | `String.length()` vs zero → `String.isEmpty()` | none (Java 6+) |
-| `io.github.taodongl.UseStringIsBlank` | `String.trim()` emptiness checks → `String.isBlank()` | **11+** |
+| `io.github.taodongl.UseStringIsEmpty` | `String.length()` vs zero / `equals("")` → `String.isEmpty()` | none (Java 6+) |
 
 ## Transformations
 
@@ -21,26 +20,27 @@ OpenRewrite recipes authored with **Refaster templates**, implementing several I
 | `Files.write(path, s.getBytes(UTF_8), options)` | `Files.writeString(path, s, options)` |
 | `Files.write(path, s.getBytes(charset), options)` | `Files.writeString(path, s, charset, options)` |
 
-### `UseStringIsEmpty` / `UseStringIsBlank`
+### `UseStringIsEmpty`
 
 | Before | After |
 | --- | --- |
 | `s.length() == 0` | `s.isEmpty()` |
 | `s.length() > 0` | `!s.isEmpty()` |
-| `s.trim().length() == 0` | `s.isBlank()` |
-| `s.trim().equals("")` | `s.isBlank()` |
-| `s.trim().isEmpty()` | `s.isBlank()` |
+| `s.equals("")` | `s.isEmpty()` |
+| `"".equals(s)` | `s.isEmpty()` |
+
+The templates are generic over any `String` expression, so a trimmed receiver is handled too:
+`s.trim().equals("")` and `s.trim().length() == 0` become `s.trim().isEmpty()` (matching IntelliJ,
+which no longer collapses these to `s.isBlank()`).
 
 Notes:
 - **Default charset is never silently changed.** Byte read/write idioms with *no* explicit charset
   (`new String(bytes)`, `s.getBytes()`) use the platform default charset, while
   `Files.readString`/`writeString` always use UTF-8 — so those forms are deliberately left untouched.
   A UTF-8 write drops the redundant charset; any other charset is preserved.
-- **`isBlank()` is Java 11+**, so `UseStringIsBlank` carries a `HasJavaVersion: [11,)` precondition;
-  `isEmpty()` (Java 6) is ungated. The gate lives in the declarative YAML, not in the generated recipe.
 - Behavioral nuances (match IntelliJ): `Files.readString()` throws on malformed input whereas
-  `new String(byte[], Charset)` substitutes the replacement character; `trim()` strips only
-  `<= U+0020` whereas `isBlank()` uses `Character.isWhitespace()`.
+  `new String(byte[], Charset)` substitutes the replacement character; `"".equals(s)` is null-safe
+  whereas the resulting `s.isEmpty()` throws on a `null` receiver.
 
 ## Project layout
 

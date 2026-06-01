@@ -10,7 +10,7 @@ the `rewrite-maven-plugin`. All recipes are authored as **Refaster templates**:
 `@BeforeTemplate`/`@AfterTemplate` pairs grouped under `@RecipeDescriptor`. The `rewrite-templating`
 annotation processor generates a `*Recipes` class at compile time into
 `target/generated-sources/annotations`. Source files: `ReadWriteStringCanBeUsed`,
-`StringIsEmptyCanBeUsed`, `StringIsBlankCanBeUsed`.
+`StringIsEmptyCanBeUsed`.
 
 The whole project is MIT-licensed; there are no vendored/third-party recipe sources.
 
@@ -19,7 +19,7 @@ The whole project is MIT-licensed; there are no vendored/third-party recipe sour
 ```bash
 ./mvnw clean test              # full build + tests
 ./mvnw test -Dtest=ReadWriteStringCanBeUsedTest          # single test class
-./mvnw test -Dtest=StringEmptinessYamlTest#isBlankAppliesOnJava11   # single test method
+./mvnw test -Dtest=StringEmptinessYamlTest#isEmptyAppliesOnJava8    # single test method
 ```
 
 Builds/runs on JDK 17, 21, 25. **The `--add-exports`/`--add-opens` flags are mandatory** because
@@ -37,7 +37,7 @@ shows `new ReadWriteStringCanBeUsedRecipes()` as unresolved, run `./mvnw test-co
   **stable public name** (e.g. `io.github.taodongl.UseFilesReadWriteString`) and is what end users
   activate. The generated class name is an internal detail; the YAML name is the contract.
 - **Java-version gating lives in the YAML, not the template.** Recipes using Java 11+ APIs
-  (`Files.readString`, `String.isBlank`) carry a `HasJavaVersion: "[11,)"` precondition.
+  (`Files.readString`/`writeString`) carry a `HasJavaVersion: "[11,)"` precondition.
   `String.isEmpty()` (Java 6) is ungated.
 
 ## Conventions that matter
@@ -57,9 +57,9 @@ shows `new ReadWriteStringCanBeUsedRecipes()` as unresolved, run `./mvnw test-co
 ## Testing pattern
 
 Tests implement `RewriteTest` and use `rewriteRun(java(before, after))`. A single-arg `java(before)`
-asserts **no change**. Use `version(java(...), N)` to pin the source Java level — essential for the
-gating tests (`StringEmptinessYamlTest`). YAML wiring is tested via `spec.recipeFromResource(path, name)`;
-generated/imperative recipes via `spec.recipe(new ...Recipes())`.
+asserts **no change**. Use `version(java(...), N)` to pin the source Java level when a recipe's
+behavior depends on it (e.g. the Java 11+ `Files.readString`/`writeString` gate). YAML wiring is
+tested via `spec.recipeFromResource(path, name)`; generated recipes via `spec.recipe(new ...Recipes())`.
 
 When adding a recipe: write the Refaster template (or `Recipe` subclass), add/extend the YAML wrapper
 with the right version precondition, add a `*Test`, and update `README.md`'s recipe table.

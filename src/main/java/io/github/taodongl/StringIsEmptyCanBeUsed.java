@@ -5,8 +5,8 @@ import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import org.openrewrite.java.template.RecipeDescriptor;
 
 /**
- * Refaster templates replacing {@code String.length()} comparisons against zero with
- * {@link String#isEmpty()}.
+ * Refaster templates replacing {@code String.length()} comparisons against zero and
+ * {@code equals("")} checks with {@link String#isEmpty()}.
  * <p>
  * {@code String.isEmpty()} has existed since Java 6, so these recipes need no Java version gate.
  * <p>
@@ -15,16 +15,23 @@ import org.openrewrite.java.template.RecipeDescriptor;
  */
 @RecipeDescriptor(
         name = "`String.isEmpty()` can be used",
-        description = "Replace `String.length()` comparisons against zero with `String.isEmpty()`."
+        description = "Replace `String.length()` comparisons against zero and `equals(\"\")` checks with " +
+                      "`String.isEmpty()`."
 )
 public class StringIsEmptyCanBeUsed {
 
     /**
-     * {@code s.length() == 0} / {@code 0 == s.length()} -> {@code s.isEmpty()}.
+     * {@code s.length() == 0} / {@code 0 == s.length()} / {@code s.equals("")} / {@code "".equals(s)}
+     * -> {@code s.isEmpty()}.
+     * <p>
+     * Behavioral note: {@code "".equals(s)} is null-safe (returns {@code false} for a {@code null}
+     * {@code s}), whereas {@code s.isEmpty()} throws {@code NullPointerException}. This matches
+     * IntelliJ's inspection behavior.
      */
     @RecipeDescriptor(
-            name = "Replace `s.length() == 0` with `s.isEmpty()`",
-            description = "Use `String.isEmpty()` instead of comparing `String.length()` to zero."
+            name = "Replace `s.length() == 0` / `s.equals(\"\")` with `s.isEmpty()`",
+            description = "Use `String.isEmpty()` instead of comparing `String.length()` to zero or " +
+                          "checking equality with the empty string."
     )
     public static class IsEmpty {
         @BeforeTemplate
@@ -35,6 +42,16 @@ public class StringIsEmptyCanBeUsed {
         @BeforeTemplate
         boolean zeroEqualsLength(String s) {
             return 0 == s.length();
+        }
+
+        @BeforeTemplate
+        boolean equalsEmptyString(String s) {
+            return s.equals("");
+        }
+
+        @BeforeTemplate
+        boolean emptyStringEquals(String s) {
+            return "".equals(s);
         }
 
         @AfterTemplate
