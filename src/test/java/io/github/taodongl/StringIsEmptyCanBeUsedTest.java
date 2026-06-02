@@ -82,19 +82,34 @@ class StringIsEmptyCanBeUsedTest implements RewriteTest {
     }
 
     @Test
-    void equalsEmptyStringVariants() {
+    void equalsEmptyString() {
         rewriteRun(
           java(
             """
               class A {
                   boolean a(String s) { return s.equals(""); }
-                  boolean b(String s) { return "".equals(s); }
               }
               """,
             """
               class A {
                   boolean a(String s) { return s.isEmpty(); }
-                  boolean b(String s) { return s.isEmpty(); }
+              }
+              """
+          )
+        );
+    }
+
+    /**
+     * {@code "".equals(s)} is null-safe (returns {@code false} for {@code null}) while
+     * {@code s.isEmpty()} throws, so the mirror form is deliberately left untouched.
+     */
+    @Test
+    void doesNotReplaceNullSafeMirror() {
+        rewriteRun(
+          java(
+            """
+              class A {
+                  boolean b(String s) { return "".equals(s); }
               }
               """
           )

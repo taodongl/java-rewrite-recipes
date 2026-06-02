@@ -27,7 +27,10 @@ OpenRewrite recipes authored with **Refaster templates**, implementing several I
 | `s.length() == 0` | `s.isEmpty()` |
 | `s.length() > 0` | `!s.isEmpty()` |
 | `s.equals("")` | `s.isEmpty()` |
-| `"".equals(s)` | `s.isEmpty()` |
+
+The null-safe mirror `"".equals(s)` is **not** rewritten: it returns `false` for a `null` `s`, whereas
+`s.isEmpty()` would throw `NullPointerException`. `s.equals("")` *is* rewritten because it already
+throws on a `null` receiver, just like `s.isEmpty()`.
 
 The templates are generic over any `String` expression, so a trimmed receiver is handled too:
 `s.trim().equals("")` and `s.trim().length() == 0` become `s.trim().isEmpty()` (matching IntelliJ,
@@ -38,9 +41,9 @@ Notes:
   (`new String(bytes)`, `s.getBytes()`) use the platform default charset, while
   `Files.readString`/`writeString` always use UTF-8 — so those forms are deliberately left untouched.
   A UTF-8 write drops the redundant charset; any other charset is preserved.
-- Behavioral nuances (match IntelliJ): `Files.readString()` throws on malformed input whereas
-  `new String(byte[], Charset)` substitutes the replacement character; `"".equals(s)` is null-safe
-  whereas the resulting `s.isEmpty()` throws on a `null` receiver.
+- Behavioral nuance (matches IntelliJ): `Files.readString()` throws on malformed input whereas
+  `new String(byte[], Charset)` substitutes the replacement character.
+- **Null-safety is never silently changed.** `"".equals(s)` is left untouched (see above).
 
 ## Project layout
 

@@ -42,6 +42,10 @@ shows `new ReadWriteStringCanBeUsedRecipes()` as unresolved, run `./mvnw test-co
 
 ## Conventions that matter
 
+- **Never silently change null semantics.** `s.equals("")` -> `s.isEmpty()` is safe (both throw on a
+  `null` receiver). The mirror `"".equals(s)` is **not** matched: it returns `false` for a `null` `s`,
+  whereas `s.isEmpty()` would throw. There is no `@BeforeTemplate` for it, and the
+  `doesNotReplaceNullSafeMirror` test locks this in — don't add one back.
 - **Never silently change charset semantics.** Byte read/write idioms with no explicit charset
   (`new String(bytes)`, `s.getBytes()`) use the platform default; `Files.readString/writeString` use
   UTF-8. Those forms are deliberately left untouched. A UTF-8 form drops the redundant charset; any

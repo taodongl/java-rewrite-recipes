@@ -4,7 +4,7 @@
 
   <groupId>io.github.taodongl</groupId>
   <artifactId>java-rewrite-recipes</artifactId>
-  <version>1.1</version>
+  <version>1.2</version>
   <packaging>jar</packaging>
 
   <name>java-rewrite-recipes</name>

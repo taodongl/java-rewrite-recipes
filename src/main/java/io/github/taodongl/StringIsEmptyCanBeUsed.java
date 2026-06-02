@@ -21,12 +21,13 @@ import org.openrewrite.java.template.RecipeDescriptor;
 public class StringIsEmptyCanBeUsed {
 
     /**
-     * {@code s.length() == 0} / {@code 0 == s.length()} / {@code s.equals("")} / {@code "".equals(s)}
-     * -> {@code s.isEmpty()}.
+     * {@code s.length() == 0} / {@code 0 == s.length()} / {@code s.equals("")} -> {@code s.isEmpty()}.
      * <p>
-     * Behavioral note: {@code "".equals(s)} is null-safe (returns {@code false} for a {@code null}
-     * {@code s}), whereas {@code s.isEmpty()} throws {@code NullPointerException}. This matches
-     * IntelliJ's inspection behavior.
+     * Null-safety note: only the {@code s.equals("")} form (receiver {@code s}) is rewritten. Like
+     * {@code s.isEmpty()}, it throws {@code NullPointerException} when {@code s} is {@code null}, so the
+     * transform preserves behavior. The mirror form {@code "".equals(s)} is deliberately <em>not</em>
+     * matched: it returns {@code false} for a {@code null} {@code s}, whereas {@code s.isEmpty()} would
+     * throw — rewriting it would change semantics.
      */
     @RecipeDescriptor(
             name = "Replace `s.length() == 0` / `s.equals(\"\")` with `s.isEmpty()`",
@@ -47,11 +48,6 @@ public class StringIsEmptyCanBeUsed {
         @BeforeTemplate
         boolean equalsEmptyString(String s) {
             return s.equals("");
-        }
-
-        @BeforeTemplate
-        boolean emptyStringEquals(String s) {
-            return "".equals(s);
         }
 
         @AfterTemplate
